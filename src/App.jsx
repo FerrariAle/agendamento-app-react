@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage"
 import AdminDashboardPage from "./pages/AdminDashboardPage"
 import PublicBookingPage from "./pages/PublicBookingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
+import AppointmentDetailPage from "./pages/AppointmentDetailPage"
 
 function App() {
   const location = useLocation();
@@ -23,6 +24,7 @@ function App() {
           {/* Rotas de Admin (Protegidas) */}
           <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboardPage /></ProtectedRoute>} />
+          <Route path="/admin/appointments/:appointmentId" element={<ProtectedRoute role="admin"><AppointmentDetailPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
