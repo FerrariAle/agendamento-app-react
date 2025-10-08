@@ -1,7 +1,6 @@
-import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
-import AdminDashboardPage from "./AdminDashboardPage";
 
 const fetchAppointmentDetails = async (appointmentId, token) => {
     const response = await fetch(`https://dummyjson.com/carts/${appointmentId}`, {
@@ -11,15 +10,44 @@ const fetchAppointmentDetails = async (appointmentId, token) => {
     return response.json();
 };
 
+const deleteAppointment = async ({ token, appointmentId }) => {
+    const response = await fetch(`https://dummyjson.com/carts/${appointmentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Falha ao deletar o agendamento.');
+    return response.json();
+};
+
 export default function AppointmentDetailPage() {
     const { appointmentId } = useParams();
     const { token } = useAuth();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const { data: appointment, status, error } = useQuery({
         queryKey: ['appointment', appointmentId],
         queryFn: () => fetchAppointmentDetails(appointmentId, token),
         enabled: !!token && !!appointmentId,
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteAppointment,
+        onSuccess: () => {
+            // Invalida a lista de agendamentos e o detalhe deste agendamento.
+            queryClient.invalidateQueries({ queryKey: ['appointments'] });
+            queryClient.removeQueries({ queryKey: ['appointment', appointmentId] });
+            alert('Agendamento deletado com sucesso!');
+            navigate('/admin/dashboard');
+        },
+        onError: (error) => alert(error.message),
+    });
+
+    const handleDelete = () => {
+        if (window.confirm('Tem certeza que deseja deletar este agendamento?')) {
+            deleteMutation.mutate({ token, appointmentId });
+        }
+    };
 
     if (status === "pending") {
         return <p>Carregando detalhes do agendamento...</p>
@@ -36,9 +64,19 @@ export default function AppointmentDetailPage() {
             </Link>
 
             <div className="bg-white p-8 rounded-2xl shadow-sm">
-                <header className="border-b border-zinc-200 pb-4 mb-6">
-                    <h1 className="text-3xl font-bold text-zinc-800">Agendamento #{appointment.id}</h1>
-                    <p className="text-zinc-500">ID do Cliente: {appointment.userId}</p>
+                <header className="border-b border-zinc-200 pb-6 mb-6 flex justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-zinc-800">Agendamento #{appointment.id}</h1>
+                        <p className="text-zinc-500">ID do Cliente: {appointment.userId}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Link to={`/admin/appointments/${appointmentId}/edit`} className="bg-primary-900 text-white font-semibold py-2 px-6 rounded-full text-sm hover:bg-primary-800 transition-colors">
+                            Editar
+                        </Link>
+                        <button onClick={handleDelete} disabled={deleteMutation.isPending} className="bg-primary-900 text-white font-semibold py-2 px-6 rounded-full text-sm hover:bg-primary-800 transition-colors">
+                            {deleteMutation.isPending ? 'Deletando...' : 'Deletar'}
+                        </button>
+                    </div>
                 </header>
 
                 <div>

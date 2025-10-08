@@ -32,7 +32,15 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-3xl font-bold text-zinc-800">Dashboard de Administração</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-zinc-800">Dashboard de Administração</h1>
+                <Link
+                    to="/admin/appointments/new"
+                    className='bg-primary-900 text-white font-semibold py-2 px-6 rounded-full text-sm hover:bg-primary-800 transition-colors'
+                >
+                    Novo Agendamento
+                </Link>
+            </div>
 
             <div className="bg-white p-6 rounded-2xl shadow-sm">
                 <h2 className="text-xl font-semibold mb-4 text-zinc-700">Próximos Agendamentos</h2>
